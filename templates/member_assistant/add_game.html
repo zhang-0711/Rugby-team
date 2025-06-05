@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}添加比赛 - 赛程助理{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h2">添加新比赛</h1>
+            <p class="text-muted">创建新的比赛记录</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('assistant.games') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> 返回比赛列表
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">比赛信息</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('assistant.add_game') }}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="season_id" class="form-label">赛季 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="season_id" name="season_id" required>
+                            <option value="" selected disabled>选择赛季</option>
+                            {% for season in seasons %}
+                            <option value="{{ season.id }}">
+                                {{ season.name }} ({{ season.start_date.strftime('%Y-%m-%d') }} 至 {{ season.end_date.strftime('%Y-%m-%d') }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="opponent" class="form-label">对手 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="opponent" name="opponent" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="match_date" class="form-label">比赛日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="match_date" name="match_date" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="kickoff_time" class="form-label">开球时间</label>
+                        <input type="time" class="form-control" id="kickoff_time" name="kickoff_time">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="location" class="form-label">比赛地点 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="location" name="location" required>
+                            <option value="" selected disabled>选择比赛地点</option>
+                            <option value="home">主场</option>
+                            <option value="away">客场</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="venue_select" class="form-label">场地</label>
+                        <select class="form-select" id="venue_select">
+                            <option value="" selected disabled>选择场地（可选）</option>
+                            {% for venue in venues if venues %}
+                            <option value="{{ venue.name }}" data-is-home="{{ venue.is_home|lower }}" data-address="{{ venue.address }}">{{ venue.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">选择场地将自动填充备注信息</div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="notes" class="form-label">备注</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info col-12">
+                        <i class="fas fa-info-circle"></i> 比赛结果可在比赛结束后通过"编辑比赛"功能添加。
+                    </div>
+                    
+                    <div class="col-12 text-end">
+                        <button type="reset" class="btn btn-secondary">重置</button>
+                        <button type="submit" class="btn btn-primary">保存比赛</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取URL中的日期参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const dateParam = urlParams.get('date');
+        if (dateParam) {
+            document.getElementById('match_date').value = dateParam;
+        }
+        
+        // 场地选择逻辑
+        const venueSelect = document.getElementById('venue_select');
+        const locationSelect = document.getElementById('location');
+        const notesTextarea = document.getElementById('notes');
+        
+        venueSelect.addEventListener('change', function() {
+            if (this.value) {
+                const selectedOption = this.options[this.selectedIndex];
+                const isHome = selectedOption.getAttribute('data-is-home') === 'true';
+                const address = selectedOption.getAttribute('data-address');
+                
+                // 设置主/客场
+                if (isHome) {
+                    locationSelect.value = 'home';
+                } else {
+                    locationSelect.value = 'away';
+                }
+                
+                // 添加场地信息到备注
+                let venueInfo = `场地: ${this.value}`;
+                if (address) {
+                    venueInfo += `\n地址: ${address}`;
+                }
+                
+                if (notesTextarea.value) {
+                    notesTextarea.value += `\n\n${venueInfo}`;
+                } else {
+                    notesTextarea.value = venueInfo;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

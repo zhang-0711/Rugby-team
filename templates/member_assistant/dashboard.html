@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}Member Assistant Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h2">成员助理工作台</h1>
+            <p class="text-muted">管理会员、账户和系统功能</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="badge bg-primary p-2">系统管理员</div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">快速链接</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('auth.member_assistant_reset_password') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-key me-2"></i> 重置用户密码
+                            </div>
+                            <span class="badge bg-primary rounded-pill">
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                        </a>
+                        <a href="{{ url_for('notification.notifications_view') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-bell me-2"></i> 消息管理
+                            </div>
+                            <span class="badge bg-primary rounded-pill">
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                        </a>
+                        <a href="{{ url_for('assistant.venues') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-map-marker-alt me-2"></i> 场地管理
+                            </div>
+                            <span class="badge bg-primary rounded-pill">
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                        </a>
+                        <a href="{{ url_for('assistant.notifications') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-bell me-2"></i> 通知管理
+                            </div>
+                            <span class="badge bg-primary rounded-pill">
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">系统工具</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1"><i class="fas fa-key text-primary me-2"></i>用户密码管理</h5>
+                            </div>
+                            <p class="mb-1">处理用户密码重置请求，特别是使用旧版密码哈希的用户无法登录的情况。</p>
+                            <a href="{{ url_for('auth.member_assistant_reset_password') }}" class="btn btn-sm btn-primary mt-2">前往密码重置工具</a>
+                        </div>
+                        <div class="list-group-item list-group-item-action mt-3">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1"><i class="fas fa-users text-primary me-2"></i>用户管理</h5>
+                            </div>
+                            <p class="mb-1">查看和管理系统中的用户信息，包括球员、教练和其他成员。</p>
+                            <a href="#" class="btn btn-sm btn-primary mt-2">查看用户列表</a>
+                        </div>
+                        <div class="list-group-item list-group-item-action mt-3">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1"><i class="fas fa-bell text-warning me-2"></i>系统通知</h5>
+                            </div>
+                            <p class="mb-1">发送系统通知给指定的用户或组织。</p>
+                            <a href="{{ url_for('notification.notifications_view') }}" class="btn btn-sm btn-warning mt-2">查看通知</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">场地概览</h5>
+                        <a href="{{ url_for('assistant.venues') }}" class="btn btn-sm btn-light">管理场地</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if venues %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>名称</th>
+                                    <th>类型</th>
+                                    <th>容量</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for venue in venues %}
+                                <tr>
+                                    <td>{{ venue.name }}</td>
+                                    <td>
+                                        <span class="badge {% if venue.is_home %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {{ '主场' if venue.is_home else '客场' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ venue.capacity if venue.capacity else '未知' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="text-muted">
+                            <i class="fas fa-map-marker-alt fa-3x mb-3"></i>
+                            <p>暂无场地信息</p>
+                            <a href="{{ url_for('assistant.add_venue') }}" class="btn btn-sm btn-primary mt-2">
+                                <i class="fas fa-plus"></i> 添加场地
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Squad Management section removed as requested -->
+    </div>
+</div>
+
+<!-- 发送通知模态框 -->
+<div class="modal fade" id="sendNotificationModal" tabindex="-1" aria-labelledby="sendNotificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendNotificationModalLabel">发送通知</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('assistant.send_notification') }}" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="target_type" value="squad">
+                    <input type="hidden" name="squad_id" id="squad_id_input">
+                    
+                    <div class="mb-3">
+                        <label for="recipient" class="form-label">接收者</label>
+                        <input type="text" class="form-control" id="recipient" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message_type" class="form-label">通知类型</label>
+                        <select class="form-select" id="message_type" name="message_type" required>
+                            <option value="announcement" selected>公告</option>
+                            <option value="training">训练</option>
+                            <option value="match">比赛</option>
+                            <option value="personal">个人</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">内容</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">发送</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 设置发送通知模态框
+        const sendNotificationButtons = document.querySelectorAll('.send-notification');
+        const squadIdInput = document.getElementById('squad_id_input');
+        const recipientInput = document.getElementById('recipient');
+        const sendNotificationModal = new bootstrap.Modal(document.getElementById('sendNotificationModal'));
+        
+        sendNotificationButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const squadId = this.getAttribute('data-squad-id');
+                const squadName = this.getAttribute('data-squad-name');
+                
+                squadIdInput.value = squadId;
+                recipientInput.value = squadName + ' 队伍';
+                
+                sendNotificationModal.show();
+            });
+        });
+    });
+</script>
+{% endblock %}

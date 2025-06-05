@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}日程规划 - 赛程助理{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h2">日程规划</h1>
+            <p class="text-muted">查看和管理比赛和训练日程</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('assistant.dashboard') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> 返回仪表盘
+            </a>
+            <a href="{{ url_for('assistant.add_game') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 添加比赛
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">{{ calendar_data.month_name }} {{ calendar_data.year }}</h5>
+            <div class="btn-group">
+                {% set prev_month = (calendar_data.month - 1) if calendar_data.month > 1 else 12 %}
+                {% set prev_year = calendar_data.year if calendar_data.month > 1 else (calendar_data.year - 1) %}
+                {% set next_month = (calendar_data.month + 1) if calendar_data.month < 12 else 1 %}
+                {% set next_year = calendar_data.year if calendar_data.month < 12 else (calendar_data.year + 1) %}
+                
+                <a href="{{ url_for('assistant.calendar', year=prev_year, month=prev_month) }}" class="btn btn-sm btn-light">
+                    <i class="fas fa-chevron-left"></i> 上个月
+                </a>
+                <a href="{{ url_for('assistant.calendar', year=current_year, month=current_month) }}" class="btn btn-sm btn-light">
+                    今天
+                </a>
+                <a href="{{ url_for('assistant.calendar', year=next_year, month=next_month) }}" class="btn btn-sm btn-light">
+                    下个月 <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center">周一</th>
+                            <th class="text-center">周二</th>
+                            <th class="text-center">周三</th>
+                            <th class="text-center">周四</th>
+                            <th class="text-center">周五</th>
+                            <th class="text-center">周六</th>
+                            <th class="text-center">周日</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for week in calendar_data.calendar %}
+                        <tr style="height: 120px;">
+                            {% for day in week %}
+                            <td class="position-relative {% if day == 0 %}bg-light{% elif day == current_day and calendar_data.month == current_month and calendar_data.year == current_year %}bg-light-success{% endif %}" 
+                                {% if day != 0 %}data-day="{{ day }}"{% endif %}>
+                                {% if day != 0 %}
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <span class="badge {% if day == current_day and calendar_data.month == current_month and calendar_data.year == current_year %}bg-success{% else %}bg-secondary{% endif %} rounded-circle p-2">
+                                        {{ day }}
+                                    </span>
+                                    <button type="button" class="btn btn-sm btn-link p-0 add-event-btn" data-day="{{ day }}" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                                        <i class="fas fa-plus-circle text-primary"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- 显示事件 -->
+                                {% if day in calendar_data.events %}
+                                <div class="mt-2 calendar-events">
+                                    {% for event in calendar_data.events[day] %}
+                                    <div class="calendar-event mb-1 p-1 rounded 
+                                        {% if event.type == 'game' %}
+                                            {% if event.location == 'home' %}bg-success text-white{% else %}bg-secondary text-white{% endif %}
+                                        {% else %}
+                                            bg-info text-white
+                                        {% endif %}">
+                                        <small>
+                                            <i class="fas {% if event.type == 'game' %}fa-trophy{% else %}fa-running{% endif %} me-1"></i>
+                                            {{ event.title }} @ {{ event.time }}
+                                        </small>
+                                        {% if event.type == 'game' %}
+                                        <a href="{{ url_for('assistant.edit_game', game_id=event.id) }}" class="text-white float-end">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">图例</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="badge bg-success p-2 me-2"><i class="fas fa-trophy"></i></div>
+                        <span>主场比赛</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="badge bg-secondary p-2 me-2"><i class="fas fa-trophy"></i></div>
+                        <span>客场比赛</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="badge bg-info p-2 me-2"><i class="fas fa-running"></i></div>
+                        <span>训练</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">快速导航</h5>
+                </div>
+                <div class="card-body">
+                    <form id="jumpToMonthForm" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="jumpMonth" class="form-label">月份</label>
+                            <select id="jumpMonth" class="form-select">
+                                {% for i in range(1, 13) %}
+                                <option value="{{ i }}" {% if i == calendar_data.month %}selected{% endif %}>{{ i }}月</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="jumpYear" class="form-label">年份</label>
+                            <select id="jumpYear" class="form-select">
+                                {% for i in range(calendar_data.year - 2, calendar_data.year + 3) %}
+                                <option value="{{ i }}" {% if i == calendar_data.year %}selected{% endif %}>{{ i }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="button" id="jumpToMonthBtn" class="btn btn-primary">前往</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加事件模态框 -->
+<div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEventModalLabel">添加事件</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">日期</label>
+                    <input type="text" class="form-control" id="eventDate" readonly>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">事件类型</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="eventType" id="gameOption" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary" for="gameOption">比赛</label>
+                        
+                        <input type="radio" class="btn-check" name="eventType" id="trainingOption" autocomplete="off">
+                        <label class="btn btn-outline-primary" for="trainingOption">训练</label>
+                    </div>
+                </div>
+                
+                <div id="gameForm">
+                    <form action="{{ url_for('assistant.add_game') }}" method="get">
+                        <input type="hidden" name="date" id="gameDate">
+                        <button type="submit" class="btn btn-success w-100">前往添加比赛页面</button>
+                    </form>
+                </div>
+                
+                <div id="trainingForm" style="display: none;">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 训练日程功能正在开发中，即将上线！
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 设置添加事件按钮
+        const addEventButtons = document.querySelectorAll('.add-event-btn');
+        const eventDateInput = document.getElementById('eventDate');
+        const gameDateInput = document.getElementById('gameDate');
+        const eventTypeOptions = document.querySelectorAll('input[name="eventType"]');
+        const gameForm = document.getElementById('gameForm');
+        const trainingForm = document.getElementById('trainingForm');
+        
+        // 月份导航
+        const jumpToMonthBtn = document.getElementById('jumpToMonthBtn');
+        const jumpMonth = document.getElementById('jumpMonth');
+        const jumpYear = document.getElementById('jumpYear');
+        
+        jumpToMonthBtn.addEventListener('click', function() {
+            const month = jumpMonth.value;
+            const year = jumpYear.value;
+            window.location.href = "{{ url_for('assistant.calendar') }}?year=" + year + "&month=" + month;
+        });
+        
+        // 事件类型切换
+        eventTypeOptions.forEach(option => {
+            option.addEventListener('change', function() {
+                if (document.getElementById('gameOption').checked) {
+                    gameForm.style.display = 'block';
+                    trainingForm.style.display = 'none';
+                } else {
+                    gameForm.style.display = 'none';
+                    trainingForm.style.display = 'block';
+                }
+            });
+        });
+        
+        // 设置日期
+        addEventButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const day = this.getAttribute('data-day');
+                const month = {{ calendar_data.month }};
+                const year = {{ calendar_data.year }};
+                
+                const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                eventDateInput.value = dateStr;
+                gameDateInput.value = dateStr;
+            });
+        });
+    });
+</script>
+
+<style>
+    .calendar-events {
+        max-height: 80px;
+        overflow-y: auto;
+    }
+    
+    .calendar-event {
+        font-size: 0.75rem;
+    }
+    
+    .bg-light-success {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+</style>
+{% endblock %}

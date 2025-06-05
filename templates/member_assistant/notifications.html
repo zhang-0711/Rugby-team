@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Notification Management - Member Assistant{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h2">Notification Management</h1>
+            <p class="text-muted">Send and manage team notifications</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('assistant.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Return to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Send New Notification</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('assistant.send_notification') }}" method="post">
+                        <div class="mb-3">
+                            <label for="target_type" class="form-label">Recipient <span class="text-danger">*</span></label>
+                            <select class="form-select" id="target_type" name="target_type" required>
+                                <option value="" selected disabled>Select Recipients</option>
+                                <option value="all">All Users</option>
+                                <option value="coaches">All Coaches</option>
+                                <option value="squad">Specific Team</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3" id="squad_selection" style="display: none;">
+                            <label for="squad_id" class="form-label">Select Team <span class="text-danger">*</span></label>
+                            <select class="form-select" id="squad_id" name="squad_id">
+                                <option value="" selected disabled>Select Team</option>
+                                {% for squad in squads %}
+                                <option value="{{ squad.id }}">{{ squad.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="message_type" class="form-label">Notification Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="message_type" name="message_type" required>
+                                <option value="announcement" selected>Announcement</option>
+                                <option value="training">Training</option>
+                                <option value="match">Match</option>
+                                <option value="personal">Personal</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Notification Title</label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="Enter notification title...">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Notification Content <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="content" name="content" rows="5" placeholder="Enter notification content..." required></textarea>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Send Notification
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Notification Templates</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <button type="button" class="list-group-item list-group-item-action" data-template="Training Template">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Training Notification</h6>
+                                <small class="text-muted">Training</small>
+                            </div>
+                            <small>Notify team members about training</small>
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action" data-template="Match Template">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Match Notification</h6>
+                                <small class="text-muted">Match</small>
+                            </div>
+                            <small>Notify team members about matches</small>
+                        </button>
+                        <button type="button" class="list-group-item list-group-item-action" data-template="Event Template">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Event Notification</h6>
+                                <small class="text-muted">Announcement</small>
+                            </div>
+                            <small>Club event notifications</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Notification Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Notifications should be concise and include all important information
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Training and match notifications should include date, time, and location
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            For important notifications, consider sending emails as well
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Avoid sending non-urgent notifications late at night
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm mt-2">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">Team List</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Team Name</th>
+                            <th>Number of Players</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for squad in squads %}
+                        <tr>
+                            <td>{{ squad.name }}</td>
+                            <td>{{ squad.players|length if squad.players else 0 }}</td>
+                            <td>{{ squad.type }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary squad-notification-btn" 
+                                        data-squad-id="{{ squad.id }}" 
+                                        data-squad-name="{{ squad.name }}">
+                                    <i class="fas fa-paper-plane"></i> Send Notification
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle recipient selection
+        const targetTypeSelect = document.getElementById('target_type');
+        const squadSelection = document.getElementById('squad_selection');
+        const squadSelect = document.getElementById('squad_id');
+        
+        targetTypeSelect.addEventListener('change', function() {
+            if (this.value === 'squad') {
+                squadSelection.style.display = 'block';
+                squadSelect.setAttribute('required', 'required');
+            } else {
+                squadSelection.style.display = 'none';
+                squadSelect.removeAttribute('required');
+            }
+        });
+        
+        // Handle template clicks
+        const templateButtons = document.querySelectorAll('[data-template]');
+        const contentTextarea = document.getElementById('content');
+        const messageTypeSelect = document.getElementById('message_type');
+        
+        const templates = {
+            'Training Template': {
+                content: 'Important Training Notice: Training will take place on [DATE] at [TIME] at [LOCATION]. Please arrive on time and in proper kit. If you are unable to attend, please notify the coach in advance.',
+                type: 'training'
+            },
+            'Match Template': {
+                content: 'Match Notification: Our team will play against [OPPONENT] on [DATE] at [TIME] at [LOCATION]. All players should arrive at [MEETING LOCATION] by [MEETING TIME]. Please bring all necessary equipment and be in good condition.',
+                type: 'match'
+            },
+            'Event Template': {
+                content: 'Club Event Notification: We will be hosting [EVENT NAME] on [DATE] at [TIME] at [LOCATION]. All team members and families are welcome to attend. Event details: [EVENT DETAILS]',
+                type: 'announcement'
+            }
+        };
+        
+        templateButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const templateName = this.getAttribute('data-template');
+                const template = templates[templateName];
+                
+                if (template) {
+                    contentTextarea.value = template.content;
+                    messageTypeSelect.value = template.type;
+                }
+            });
+        });
+        
+        // Handle team notification buttons
+        const squadNotificationButtons = document.querySelectorAll('.squad-notification-btn');
+        
+        squadNotificationButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const squadId = this.getAttribute('data-squad-id');
+                const squadName = this.getAttribute('data-squad-name');
+                
+                targetTypeSelect.value = 'squad';
+                squadSelection.style.display = 'block';
+                squadSelect.setAttribute('required', 'required');
+                
+                // Set team
+                for (let i = 0; i < squadSelect.options.length; i++) {
+                    if (squadSelect.options[i].value === squadId) {
+                        squadSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                
+                // Scroll to form
+                document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    });
+</script>
+{% endblock %}

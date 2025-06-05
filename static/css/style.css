@@ -1,0 +1,145 @@
+/* Custom styles */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Arial', sans-serif;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    margin-bottom: 20px;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Update primary color to Aston Martin Green */
+.bg-primary {
+    background-color: #004225 !important; /* Use !important to override Bootstrap defaults */
+}
+
+.navbar-dark.bg-primary {
+    background-color: #004225 !important;
+}
+
+.btn-primary {
+    background-color: #004225;
+    border-color: #004225;
+}
+
+.btn-primary:hover {
+    background-color: #00311c; /* Darker shade for hover */
+    border-color: #002112; /* Even darker shade for border on hover */
+}
+
+.btn-primary:focus,
+.btn-primary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 66, 37, 0.5); /* Focus glow with the green color */
+}
+
+.text-primary {
+    color: #004225 !important;
+}
+
+.alert-primary {
+    color: #001f11;
+    background-color: #cce3d8;
+    border-color: #b8d9ca;
+}
+
+.form-control:focus {
+    border-color: #004225;
+    box-shadow: 0 0 0 0.2rem rgba(0, 66, 37, 0.25);
+}
+
+.progress-bar.bg-primary {
+    background-color: #004225 !important;
+}
+
+.badge.bg-primary {
+    background-color: #004225 !important;
+}
+
+/* You might need to adjust other elements like links if they use the primary color */
+a {
+    color: #004225;
+}
+
+a:hover {
+    color: #00311c;
+}
+
+.alert {
+    border-radius: 0;
+}
+
+.jumbotron {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+    background-color: #f8f9fa;
+}
+
+.progress {
+    height: 20px;
+}
+
+.badge {
+    font-size: 0.9em;
+}
+
+.list-group-item {
+    transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Style outline buttons */
+.btn-outline-primary {
+    color: #004225;
+    border-color: #004225;
+}
+
+.btn-outline-primary:hover {
+    color: #fff;
+    background-color: #004225;
+    border-color: #004225;
+}
+
+/* Style secondary buttons */
+.btn-secondary {
+    background-color: #6c757d; /* Bootstrap default grey */
+    border-color: #6c757d;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+} 

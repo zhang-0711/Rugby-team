@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}场地管理 - 赛程助理{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h2">场地管理</h1>
+            <p class="text-muted">管理比赛和训练场地信息</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('assistant.dashboard') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> 返回仪表盘
+            </a>
+            <a href="{{ url_for('assistant.add_venue') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 添加场地
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">场地列表</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if venues %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>名称</th>
+                            <th>地址</th>
+                            <th>容量</th>
+                            <th>类型</th>
+                            <th>联系方式</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for venue in venues %}
+                        <tr>
+                            <td>{{ venue.name }}</td>
+                            <td>{{ venue.address if venue.address else '未设置' }}</td>
+                            <td>{{ venue.capacity if venue.capacity else '未知' }}</td>
+                            <td>
+                                <span class="badge {% if venue.is_home %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ '主场' if venue.is_home else '客场' }}
+                                </span>
+                            </td>
+                            <td>{{ venue.contact_info if venue.contact_info else '无' }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('assistant.edit_venue', venue_id=venue.id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger delete-venue-btn" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteVenueModal" 
+                                            data-venue-id="{{ venue.id }}"
+                                            data-venue-name="{{ venue.name }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="text-muted">
+                    <i class="fas fa-map-marker-alt fa-3x mb-3"></i>
+                    <p>尚未添加任何场地信息</p>
+                    <a href="{{ url_for('assistant.add_venue') }}" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus"></i> 添加场地
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">场地使用情况</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 场地预订和使用统计功能正在开发中，敬请期待！
+            </div>
+            
+            <h6 class="mt-4">主要场地概览</h6>
+            <div class="row">
+                {% for venue in venues if venue.is_home %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            {{ venue.name }}
+                        </div>
+                        <div class="card-body">
+                            <p><strong>地址：</strong> {{ venue.address if venue.address else '未设置' }}</p>
+                            <p><strong>容量：</strong> {{ venue.capacity if venue.capacity else '未知' }}</p>
+                            {% if venue.facilities %}
+                            <p><strong>设施：</strong> {{ venue.facilities }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <p class="text-muted">尚未添加主场场地。</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteVenueModal" tabindex="-1" aria-labelledby="deleteVenueModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteVenueModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除以下场地吗？</p>
+                <p class="fw-bold" id="deleteVenueName"></p>
+                <p class="text-danger">此操作无法撤销。相关的比赛和训练可能会受到影响。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="deleteVenueForm" method="post" action="">
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 删除场地确认
+        const deleteButtons = document.querySelectorAll('.delete-venue-btn');
+        const deleteForm = document.getElementById('deleteVenueForm');
+        const deleteVenueName = document.getElementById('deleteVenueName');
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const venueId = this.getAttribute('data-venue-id');
+                const venueName = this.getAttribute('data-venue-name');
+                
+                deleteForm.action = "{{ url_for('assistant.delete_venue', venue_id=0) }}".replace('0', venueId);
+                deleteVenueName.textContent = venueName;
+            });
+        });
+    });
+</script>
+{% endblock %}

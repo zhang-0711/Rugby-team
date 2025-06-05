@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}编辑比赛 - 赛程助理{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h2">编辑比赛信息</h1>
+            <p class="text-muted">修改比赛详情和记录比赛结果</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('assistant.games', season_id=game.season_id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> 返回比赛列表
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">比赛基本信息</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('assistant.edit_game', game_id=game.id) }}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="opponent" class="form-label">对手 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="opponent" name="opponent" value="{{ game.opponent }}" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="match_date" class="form-label">比赛日期 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="match_date" name="match_date" value="{{ game.match_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="kickoff_time" class="form-label">开球时间</label>
+                        <input type="time" class="form-control" id="kickoff_time" name="kickoff_time" value="{{ game.kickoff_time.strftime('%H:%M') if game.kickoff_time }}">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="location" class="form-label">比赛地点 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="location" name="location" required>
+                            <option value="home" {% if game.location == 'home' %}selected{% endif %}>主场</option>
+                            <option value="away" {% if game.location == 'away' %}selected{% endif %}>客场</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="notes" class="form-label">比赛前备注</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ game.comments_half1 }}</textarea>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                
+                <h5 class="mb-3">比赛结果</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="score_for" class="form-label">我方得分</label>
+                        <input type="number" class="form-control" id="score_for" name="score_for" value="{{ game.score_for if game.score_for is not none }}">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="score_against" class="form-label">对方得分</label>
+                        <input type="number" class="form-control" id="score_against" name="score_against" value="{{ game.score_against if game.score_against is not none }}">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="result" class="form-label">比赛结果</label>
+                        <select class="form-select" id="result" name="result">
+                            <option value="" {% if game.result is none %}selected{% endif %}>未记录</option>
+                            <option value="won" {% if game.result == 'won' %}selected{% endif %}>胜</option>
+                            <option value="lost" {% if game.result == 'lost' %}selected{% endif %}>负</option>
+                            <option value="drew" {% if game.result == 'drew' %}selected{% endif %}>平</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="comments_half2" class="form-label">比赛后总结</label>
+                        <textarea class="form-control" id="comments_half2" name="comments_half2" rows="3">{{ game.comments_half2 }}</textarea>
+                    </div>
+                    
+                    <div class="col-12 text-end mt-4">
+                        <button type="submit" class="btn btn-primary">保存更改</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">快速操作</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-success notify-game-btn" data-bs-toggle="modal" data-bs-target="#notifyModal">
+                            <i class="fas fa-bell"></i> 发送比赛通知
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-danger delete-game-btn" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash-alt"></i> 删除比赛
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除以下比赛吗？</p>
+                <p class="fw-bold">{{ game.match_date.strftime('%Y-%m-%d') }} vs {{ game.opponent }}</p>
+                <p class="text-danger">此操作无法撤销。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form method="post" action="{{ url_for('assistant.delete_game', game_id=game.id) }}">
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 发送通知模态框 -->
+<div class="modal fade" id="notifyModal" tabindex="-1" aria-labelledby="notifyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notifyModalLabel">发送比赛通知</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('assistant.send_notification') }}" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="message_type" value="match">
+                    
+                    <div class="mb-3">
+                        <label for="notification_target" class="form-label">通知对象</label>
+                        <select class="form-select" id="notification_target" name="target_type" required>
+                            <option value="all">所有人</option>
+                            <option value="coaches">所有教练</option>
+                            <option value="squad">选择队伍...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="squad_selection" style="display: none;">
+                        <label for="squad_id" class="form-label">选择队伍</label>
+                        <select class="form-select" id="squad_id" name="squad_id">
+                            <option value="" selected disabled>选择队伍</option>
+                            {% for squad in squads if squads %}
+                            <option value="{{ squad.id }}">{{ squad.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">通知内容</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" required>重要比赛通知：我们将于{{ game.match_date.strftime('%Y-%m-%d') }} {{ game.kickoff_time.strftime('%H:%M') if game.kickoff_time else '待定时间' }}在{{ '主场' if game.location == 'home' else '客场' }}与{{ game.opponent }}进行比赛。请相关人员做好准备，准时到场。</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">发送通知</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 比赛结果自动计算
+        const scoreFerInput = document.getElementById('score_for');
+        const scoreAgainstInput = document.getElementById('score_against');
+        const resultSelect = document.getElementById('result');
+        
+        function updateResult() {
+            const scoreFor = parseInt(scoreFerInput.value);
+            const scoreAgainst = parseInt(scoreAgainstInput.value);
+            
+            if (!isNaN(scoreFor) && !isNaN(scoreAgainst)) {
+                if (scoreFor > scoreAgainst) {
+                    resultSelect.value = 'won';
+                } else if (scoreFor < scoreAgainst) {
+                    resultSelect.value = 'lost';
+                } else {
+                    resultSelect.value = 'drew';
+                }
+            }
+        }
+        
+        scoreFerInput.addEventListener('change', updateResult);
+        scoreAgainstInput.addEventListener('change', updateResult);
+        
+        // 队伍选择处理
+        const notificationTarget = document.getElementById('notification_target');
+        const squadSelection = document.getElementById('squad_selection');
+        const squadSelect = document.getElementById('squad_id');
+        
+        notificationTarget.addEventListener('change', function() {
+            if (this.value === 'squad') {
+                squadSelection.style.display = 'block';
+                squadSelect.setAttribute('required', 'required');
+            } else {
+                squadSelection.style.display = 'none';
+                squadSelect.removeAttribute('required');
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block title %}比赛管理 - 赛程助理{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h1 class="h2">比赛管理</h1>
+            <p class="text-muted">查看和管理俱乐部比赛信息</p>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('assistant.dashboard') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> 返回仪表盘
+            </a>
+            <a href="{{ url_for('assistant.add_game') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> 添加比赛
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">赛季选择</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('assistant.games') }}" method="get" class="row g-3">
+                <div class="col-md-9">
+                    <select name="season_id" class="form-select" id="season_select">
+                        <option value="">选择赛季</option>
+                        {% for season in seasons %}
+                        <option value="{{ season.id }}" {% if season.id == selected_season_id %}selected{% endif %}>
+                            {{ season.name }} ({{ season.start_date.strftime('%Y-%m-%d') }} 至 {{ season.end_date.strftime('%Y-%m-%d') }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">筛选</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">比赛列表</h5>
+            <div>
+                <a href="{{ url_for('assistant.calendar') }}" class="btn btn-sm btn-light">
+                    <i class="fas fa-calendar-alt"></i> 日历视图
+                </a>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if games %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>日期</th>
+                            <th>对手</th>
+                            <th>时间</th>
+                            <th>地点</th>
+                            <th>比分</th>
+                            <th>结果</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for game in games %}
+                        <tr>
+                            <td>{{ game.match_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ game.opponent }}</td>
+                            <td>{{ game.kickoff_time.strftime('%H:%M') if game.kickoff_time else '待定' }}</td>
+                            <td>
+                                <span class="badge {% if game.location == 'home' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ '主场' if game.location == 'home' else '客场' }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if game.score_for is not none and game.score_against is not none %}
+                                {{ game.score_for }} - {{ game.score_against }}
+                                {% else %}
+                                --
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if game.result == 'won' %}
+                                <span class="badge bg-success">胜</span>
+                                {% elif game.result == 'lost' %}
+                                <span class="badge bg-danger">负</span>
+                                {% elif game.result == 'drew' %}
+                                <span class="badge bg-warning">平</span>
+                                {% else %}
+                                <span class="badge bg-secondary">未进行</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('assistant.edit_game', game_id=game.id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger delete-game-btn" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#deleteModal" 
+                                            data-game-id="{{ game.id }}"
+                                            data-game-opponent="{{ game.opponent }}"
+                                            data-game-date="{{ game.match_date.strftime('%Y-%m-%d') }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success notify-btn"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#notifyModal"
+                                            data-game-id="{{ game.id }}"
+                                            data-game-opponent="{{ game.opponent }}"
+                                            data-game-date="{{ game.match_date.strftime('%Y-%m-%d') }}"
+                                            data-game-time="{{ game.kickoff_time.strftime('%H:%M') if game.kickoff_time else '待定' }}"
+                                            data-game-location="{{ '主场' if game.location == 'home' else '客场' }}">
+                                        <i class="fas fa-bell"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="text-muted">
+                    <i class="fas fa-trophy fa-3x mb-3"></i>
+                    {% if selected_season_id %}
+                    <p>所选赛季尚无比赛安排</p>
+                    <a href="{{ url_for('assistant.add_game') }}" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus"></i> 添加比赛
+                    </a>
+                    {% else %}
+                    <p>请先选择一个赛季</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除以下比赛吗？</p>
+                <p class="fw-bold" id="deleteGameInfo"></p>
+                <p class="text-danger">此操作无法撤销。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form id="deleteForm" method="post" action="">
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 发送通知模态框 -->
+<div class="modal fade" id="notifyModal" tabindex="-1" aria-labelledby="notifyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notifyModalLabel">发送比赛通知</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('assistant.send_notification') }}" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="target_type" value="all">
+                    <input type="hidden" name="message_type" value="match">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">比赛信息</label>
+                        <p id="notifyGameInfo" class="form-control-plaintext"></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notification_target" class="form-label">通知对象</label>
+                        <select class="form-select" id="notification_target" name="target_type" required>
+                            <option value="all">所有人</option>
+                            <option value="coaches">所有教练</option>
+                            {% for squad in squads %}
+                            <option value="squad" data-squad-id="{{ squad.id }}">{{ squad.name }} 队伍</option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" id="squad_id_notify" name="squad_id">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">通知内容</label>
+                        <textarea class="form-control" id="notifyContent" name="content" rows="5" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">发送通知</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 自动提交赛季选择表单
+        const seasonSelect = document.getElementById('season_select');
+        if (seasonSelect) {
+            seasonSelect.addEventListener('change', function() {
+                this.form.submit();
+            });
+        }
+        
+        // 删除比赛确认
+        const deleteButtons = document.querySelectorAll('.delete-game-btn');
+        const deleteForm = document.getElementById('deleteForm');
+        const deleteGameInfo = document.getElementById('deleteGameInfo');
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const gameId = this.getAttribute('data-game-id');
+                const opponent = this.getAttribute('data-game-opponent');
+                const date = this.getAttribute('data-game-date');
+                
+                deleteForm.action = "{{ url_for('assistant.delete_game', game_id=0) }}".replace('0', gameId);
+                deleteGameInfo.textContent = `${date} vs ${opponent}`;
+            });
+        });
+        
+        // 发送通知
+        const notifyButtons = document.querySelectorAll('.notify-btn');
+        const notifyGameInfo = document.getElementById('notifyGameInfo');
+        const notifyContent = document.getElementById('notifyContent');
+        const notificationTarget = document.getElementById('notification_target');
+        const squadIdNotify = document.getElementById('squad_id_notify');
+        
+        notifyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const opponent = this.getAttribute('data-game-opponent');
+                const date = this.getAttribute('data-game-date');
+                const time = this.getAttribute('data-game-time');
+                const location = this.getAttribute('data-game-location');
+                
+                const gameInfo = `比赛对阵: ${opponent}\n日期: ${date}\n时间: ${time}\n地点: ${location}`;
+                notifyGameInfo.textContent = gameInfo;
+                
+                // 预填通知内容
+                notifyContent.value = `重要比赛通知：我们将于${date} ${time}在${location}与${opponent}进行比赛。请相关人员做好准备，准时到场。`;
+                
+                // 监听通知对象选择
+                notificationTarget.addEventListener('change', function() {
+                    if (this.value === 'squad') {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const squadId = selectedOption.getAttribute('data-squad-id');
+                        squadIdNotify.value = squadId;
+                    } else {
+                        squadIdNotify.value = '';
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

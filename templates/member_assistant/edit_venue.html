@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}编辑场地 - 赛程助理{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <h1 class="h2">编辑场地信息</h1>
+            <p class="text-muted">修改场地详情和设施信息</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('assistant.venues') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> 返回场地列表
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">场地信息</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('assistant.edit_venue', venue_id=venue.id) }}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">场地名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ venue.name }}" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="is_home" class="form-label">场地类型</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="1" id="is_home" name="is_home" {% if venue.is_home %}checked{% endif %}>
+                            <label class="form-check-label" for="is_home">
+                                这是俱乐部主场
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="address" class="form-label">地址</label>
+                        <input type="text" class="form-control" id="address" name="address" value="{{ venue.address }}">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="capacity" class="form-label">容量</label>
+                        <input type="number" class="form-control" id="capacity" name="capacity" min="0" value="{{ venue.capacity }}">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="contact_info" class="form-label">联系方式</label>
+                        <input type="text" class="form-control" id="contact_info" name="contact_info" value="{{ venue.contact_info }}">
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="facilities" class="form-label">设施</label>
+                        <textarea class="form-control" id="facilities" name="facilities" rows="3" placeholder="例如：更衣室、停车场、看台、餐饮设施等">{{ venue.facilities }}</textarea>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="notes" class="form-label">备注</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ venue.notes }}</textarea>
+                    </div>
+                    
+                    <div class="col-12 text-end">
+                        <button type="reset" class="btn btn-secondary">重置</button>
+                        <button type="submit" class="btn btn-primary">保存更改</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">危险操作</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-danger">
+                <i class="fas fa-exclamation-triangle"></i> 
+                删除场地将会影响所有与该场地关联的比赛和训练，请谨慎操作。
+            </p>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteVenueModal">
+                <i class="fas fa-trash"></i> 删除场地
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal fade" id="deleteVenueModal" tabindex="-1" aria-labelledby="deleteVenueModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteVenueModalLabel">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除以下场地吗？</p>
+                <p class="fw-bold">{{ venue.name }}</p>
+                <p class="text-danger">此操作无法撤销。相关的比赛和训练可能会受到影响。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <form method="post" action="{{ url_for('assistant.delete_venue', venue_id=venue.id) }}">
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
